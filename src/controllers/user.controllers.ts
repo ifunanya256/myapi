@@ -8,88 +8,98 @@ import { AppError } from "../global/error";
 
 export class UserController {
   async createUser(req: Request, res: Response) {
-    const requestBody = req.body as CreateUserDTO;
+    try {
+      const requestBody = req.body as CreateUserDTO;
 
-    // collect and format the request body
-    const userInsert: typeof userTable.$inferInsert = {
-      firstName: requestBody.firstName,
-      lastName: requestBody.lastName,
-      username: requestBody.username,
-      password: requestBody.password,
-      email: requestBody.email,
-    };
+      // collect and format the request body
+      const userInsert: typeof userTable.$inferInsert = {
+        firstName: requestBody.firstName,
+        lastName: requestBody.lastName,
+        username: requestBody.username,
+        password: requestBody.password,
+        email: requestBody.email,
+      };
 
-    // check if user already exists via email and username
-    const existingEmail = await db
-      .select()
-      .from(userTable)
-      .where(eq(userTable.email, requestBody.email));
+      // check if user already exists via email and username
+      const existingEmail = await db
+        .select()
+        .from(userTable)
+        .where(eq(userTable.email, requestBody.email));
 
-    if (existingEmail.length > 0) {
-      throw AppError.conflict({
-        message: "email already exists",
+      if (existingEmail.length > 0) {
+        throw AppError.conflict({
+          message: "email already exists",
+        });
+      }
+
+      const existingUsername = await db
+        .select()
+        .from(userTable)
+        .where(eq(userTable.username, requestBody.username));
+
+      if (existingUsername.length > 0) {
+        throw AppError.conflict({
+          message: "username already exists",
+        });
+      }
+
+      // save user
+      const [savedUser] = await db
+        .insert(userTable)
+        .values(userInsert)
+        .returning({
+          id: userTable.id,
+          firstName: userTable.firstName,
+          lastName: userTable.lastName,
+          username: userTable.username,
+          email: userTable.email,
+        });
+
+      // return message
+      return {
+        message: "You have completed the sign up path",
+        data: savedUser,
+      };
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+
+      throw AppError.internalServerError({
+        message: "something happened",
       });
     }
-
-    const existingUsername = await db
-      .select()
-      .from(userTable)
-      .where(eq(userTable.username, requestBody.username));
-
-    if (existingUsername.length > 0) {
-      throw AppError.conflict({
-        message: "username already exists",
-      });
-    }
-
-    // save user
-    const [savedUser] = await db
-      .insert(userTable)
-      .values(userInsert)
-      .returning({
-        id: userTable.id,
-        firstName: userTable.firstName,
-        lastName: userTable.lastName,
-        username: userTable.username,
-        email: userTable.email,
-      });
-
-    // return message
-    return {
-      message: "You have completed the sign up path",
-      data: savedUser,
-    };
   }
 
- async getAllUser(req: Request, res: Response) {
+  async getAllUser(req: Request, res: Response) {
     const users = await db.select().from(userTable);
     const total = await db.select({ count: count() }).from(userTable);
- 
+
     return {
       message: "Response successful",
       data: users,
-      total: total[0].count
-    }
+      total: total[0].count,
+    };
   }
 
   async getSingleUser(req: Request, res: Response) {
-    const { email } = req.params
+    const { email } = req.params;
 
     const [user] = await db
-    .select()
-    .from(userTable)
-    .where(eq(userTable.email, email.toString().toLowerCase()))
+      .select()
+      .from(userTable)
+      .where(eq(userTable.email, email.toString().toLowerCase()));
 
     if (!user) {
       throw AppError.notFound({
         message: "user not found",
-        details: `cant find user by this email: ${email.toString().toLowerCase()}`
-      })
+        details: `cant find user by this email: ${email.toString().toLowerCase()}`,
+      });
     }
 
-    return{
+    return {
       message: `user with email:${email} has been retrieved`,
       data: user,
-    }
+    };
   }
 }
