@@ -78,7 +78,14 @@ export class UserController {
     const [user] = await db
     .select()
     .from(userTable)
-    .where(eq(userTable.email, email.toString()))
+    .where(eq(userTable.email, email.toString().toLowerCase()))
+
+    if (!user) {
+      throw AppError.notFound({
+        message: "user not found",
+        details: `cant find user by this email: ${email.toString().toLowerCase()}`
+      })
+    }
 
     return{
       message: `user with email:${email} has been retrieved`,

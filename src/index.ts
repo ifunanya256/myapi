@@ -4,7 +4,7 @@ import helmet from "helmet";
 import dotenv from "dotenv";
 import { env } from "./config/env";
 import { connectDb } from "./config/db";
-import { logger, responseInterceptor } from "./middleware";
+import { errorHandler, logger, responseInterceptor } from "./middleware";
 import router from "./routes";
 dotenv.config()
 // import { connectDb } from "./config/db";
@@ -18,6 +18,8 @@ app.use(logger)
 app.use(responseInterceptor)
 
 app.use("/api/v1", router)
+
+app.use(errorHandler)
 
 async function start() {
   await connectDb()
