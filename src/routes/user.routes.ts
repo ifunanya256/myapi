@@ -13,4 +13,7 @@ router.post(
     userController.createUser.bind(userController)
 )
 
+router.get("/users",userController.getAllUser.bind(userController))
+router.get("/:email",userController.getSingleUser.bind(userController))
+
 export default router

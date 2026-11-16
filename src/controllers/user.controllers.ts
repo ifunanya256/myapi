@@ -19,7 +19,7 @@ export class UserController {
       email: requestBody.email,
     };
 
-    // check if user already exists
+    // check if user already exists via email and username
     const existingEmail = await db
       .select()
       .from(userTable)
@@ -59,5 +59,30 @@ export class UserController {
       message: "You have completed the sign up path",
       data: savedUser,
     };
+  }
+
+ async getAllUser(req: Request, res: Response) {
+    const users = await db.select().from(userTable);
+    const total = await db.select({ count: count() }).from(userTable);
+ 
+    return {
+      message: "Response successful",
+      data: users,
+      total: total[0].count
+    }
+  }
+
+  async getSingleUser(req: Request, res: Response) {
+    const { email } = req.params
+
+    const [user] = await db
+    .select()
+    .from(userTable)
+    .where(eq(userTable.email, email.toString()))
+
+    return{
+      message: `user with email:${email} has been retrieved`,
+      data: user,
+    }
   }
 }
