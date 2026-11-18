@@ -5,6 +5,7 @@ import { userTable } from "../db/user.schema";
 import { eq } from "drizzle-orm";
 import { AppError } from "../global/error";
 import { HashingProvider } from "../global/hashing";
+import { generateToken } from "../global/jwt/jwt";
 
 export class AuthController {
   constructor(private readonly hashingProvider: HashingProvider) {}
@@ -106,12 +107,16 @@ export class AuthController {
         });
       }
 
-      // give user access by generating access and refresh token
+      // give user access by generating access  token
+      const { accessToken } = generateToken({
+        userId: existingUsername.id,
+        username: existingUsername.username
+      });
 
       // return message
-
       return {
         message: "login successful",
+        accessToken: accessToken
       };
     } catch (error) {
       console.error({ error });
