@@ -36,4 +36,12 @@ export const signupDto = z.object({
     .regex(emailRegex, "Please enter a valid email address"),
 });
 
-export type SignupDto = z.infer<typeof signupDto>
+export type SignupDto = z.infer<typeof signupDto>;
+
+export const loginDto = z.object({
+  username: z.string().toLowerCase(),
+
+  password: z.string(),
+});
+
+export type LoginDto = z.infer<typeof loginDto>;

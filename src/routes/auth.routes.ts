@@ -1,5 +1,5 @@
 import { AuthController } from "../controllers/auth.controller";
-import { signupDto } from "../dto/auth/auth.dto";
+import { loginDto, signupDto } from "../dto/auth/auth.dto";
 import { BcryptProvider } from "../global/hashing";
 import { validateBody } from "../middleware/validation.middleware";
 import { createRouter } from "../utils/router";
@@ -14,6 +14,12 @@ router.post(
   "/signup",
   validateBody(signupDto),
   authController.signup.bind(authController),
+);
+
+router.post(
+  "/login",
+  validateBody(loginDto),
+  authController.login.bind(authController),
 );
 
 export default router;

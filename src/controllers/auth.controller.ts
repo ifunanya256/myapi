@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { SignupDto } from "../dto/auth/auth.dto";
+import { LoginDto, SignupDto } from "../dto/auth/auth.dto";
 import { db } from "../config/db";
 import { userTable } from "../db/user.schema";
 import { eq } from "drizzle-orm";
@@ -14,8 +14,8 @@ export class AuthController {
       // receive the signup request
       const signupRequest = req.body as SignupDto;
 
-      const email = signupRequest.email.trim().toLowerCase();
-      const username = signupRequest.username.trim().toLowerCase();
+      const email = signupRequest.email.trim();
+      const username = signupRequest.username.trim();
 
       // check if the email already exists
       const [existingUserEmail] = await db
@@ -33,7 +33,7 @@ export class AuthController {
       const [existingUsername] = await db
         .select()
         .from(userTable)
-        .where(eq(userTable.email, email));
+        .where(eq(userTable.username, username));
 
       if (existingUsername) {
         throw AppError.notFound({
@@ -65,8 +65,56 @@ export class AuthController {
         data: savedUser,
       };
     } catch (error) {
+      console.error({ error });
 
-      console.error({error})
+      if (error instanceof AppError) {
+        throw error;
+      }
+
+      throw AppError.internalServerError({
+        message: "something went wrong, try again later",
+      });
+    }
+  }
+
+  async login(req: Request, res: Response) {
+    try {
+      // receive the login request
+      const loginRequest = req.body as LoginDto;
+
+      // check if the user exists
+      const [existingUsername] = await db
+        .select()
+        .from(userTable)
+        .where(eq(userTable.username, loginRequest.username));
+
+      if (!existingUsername) {
+        throw AppError.notFound({
+          message: "invalid credentials",
+        });
+      }
+
+      // compare password
+      const isPasswordCorrect = await this.hashingProvider.comparePasswords({
+        password: loginRequest.password,
+        hashedPassword: existingUsername.password,
+      });
+
+      if (!isPasswordCorrect) {
+        throw AppError.badRequest({
+          message: "invalid credentials",
+        });
+      }
+
+      // give user access by generating access and refresh token
+
+      // return message
+
+      return {
+        message: "login successful",
+      };
+    } catch (error) {
+      console.error({ error });
 
       if (error instanceof AppError) {
         throw error;
