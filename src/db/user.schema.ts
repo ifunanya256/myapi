@@ -2,8 +2,8 @@ import { integer, pgTable, varchar, boolean, uuid, timestamp } from "drizzle-orm
 
 export const userTable = pgTable("user", {
   id: uuid().primaryKey().defaultRandom(),
-  firstName: varchar({ length: 100 }).notNull(),
-  lastName: varchar({ length: 100 }).notNull(),
+  firstName: varchar({ length: 100 }),
+  lastName: varchar({ length: 100 }),
   username: varchar().notNull().unique(),
   email: varchar().notNull().unique(),
   password: varchar().notNull(),

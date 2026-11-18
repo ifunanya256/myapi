@@ -92,7 +92,7 @@ export class UserController {
       .from(userTable)
       .where(eq(userTable.email, email.toString().toLowerCase()));
 
-    if (!user) {
+    if (user) {
       throw AppError.notFound({
         message: "user not found",
         details: `cant find user by this email: ${email.toString().toLowerCase()}`,
@@ -110,12 +110,12 @@ export class UserController {
 
     const updateBody = req.body as UpdateUserDTO
 
-    const user = await db
+    const [user] = await db
     .select()
     .from(userTable)
     .where(eq(userTable.id, id.toString()))
 
-    if (user.length == 0) {
+    if (!user) {
       throw AppError.badRequest({
         message: "User not found",
         details: "check the id passed.... call the getAllUser endpoint user",
