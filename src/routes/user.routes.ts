@@ -15,5 +15,7 @@ router.post(
 
 router.get("/users",userController.getAllUser.bind(userController))
 router.get("/:email",userController.getSingleUser.bind(userController))
+router.patch("/:id", userController.updateSingleUser.bind(userController))
+router.delete("/:firstName", userController.deleteSingleUser.bind(userController))
 
 export default router

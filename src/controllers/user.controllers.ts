@@ -3,8 +3,10 @@ import { userTable } from "../db/user.schema";
 import { db } from "../config/db";
 import { count, eq } from "drizzle-orm";
 import { request } from "node:http";
-import { CreateUserDTO } from "../dto";
+import { CreateUserDTO, UpdateUserDTO } from "../dto";
 import { AppError } from "../global/error";
+import { id } from "zod/v4/locales";
+import { toLowerCase } from "zod";
 
 export class UserController {
   async createUser(req: Request, res: Response) {
@@ -102,4 +104,51 @@ export class UserController {
       data: user,
     };
   }
+
+  async updateSingleUser (req: Request, res: Response) {
+    const { id } = req.params
+
+    const updateBody = req.body as UpdateUserDTO
+
+    const user = await db
+    .select()
+    .from(userTable)
+    .where(eq(userTable.id, id.toString()))
+
+    if (user.length == 0) {
+      throw AppError.badRequest({
+        message: "User not found",
+        details: "check the id passed.... call the getAllUser endpoint user",
+      })
+    }
+
+    const updatedUser = await db
+    .update(userTable)
+    .set({
+      firstName: updateBody.firstName,
+      lastName: updateBody.lastName,
+      username: updateBody.username,
+      password: updateBody.password,
+      email: updateBody.email,
+    })
+    .where(eq(userTable.id, id.toString()))
+    .returning
+
+    return{
+      message: "User Updated Successfully",
+      data: updatedUser,
+    }
+  }
+
+  async deleteSingleUser(req: Request, res:Response) {
+    const { firstName } = req.params
+
+    await db.delete(userTable).where(eq(userTable.firstName, firstName.toString()))
+
+    return{
+      message: "The user has been deleted"
+    }
+  }
 }
+
+
