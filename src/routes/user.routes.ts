@@ -3,10 +3,12 @@ import { UserController } from "../controllers/user.controllers";
 import { validateBody } from "../middleware/validation.middleware";
 import { createUserDto, updateUserDto } from "../dto";
 import { authenticationMiddleware } from "../middleware/auth.middleware";
+import { BcryptProvider } from "../global/hashing";
 
 const router = createRouter();
 
-const userController = new UserController();
+const hashingProvider = new BcryptProvider();
+const userController = new UserController(hashingProvider);
 
 router.get(
   "/whoami",
@@ -19,6 +21,12 @@ router.patch(
   validateBody(updateUserDto),
   authenticationMiddleware,
   userController.updateSingleProfile.bind(userController),
+);
+
+router.delete(
+  "/:password",
+  authenticationMiddleware,
+  userController.deleteProfile.bind(userController),
 );
 
 export default router;

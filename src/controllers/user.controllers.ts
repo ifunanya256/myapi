@@ -4,8 +4,12 @@ import { db } from "../config/db";
 import { count, eq } from "drizzle-orm";
 import { CreateUserDTO, UpdateUserDTO } from "../dto";
 import { AppError } from "../global/error";
+import { profile } from "node:console";
+import { HashingProvider } from "../global/hashing";
 
 export class UserController {
+  constructor(private readonly hashingProvider: HashingProvider) {}
+
   async whoami(req: Request, res: Response) {
     try {
       const user = req.user;
@@ -138,8 +142,8 @@ export class UserController {
     if (updateBody.email) {
       if (updateBody.email === user.email) {
         throw AppError.badRequest({
-          message: "new email cannot be the same as old"
-        })
+          message: "new email cannot be the same as old",
+        });
       }
 
       const [existingEmail] = await db
@@ -199,4 +203,48 @@ export class UserController {
   //     message: "The user has been deleted"
   //   }
   // }
+
+  async deleteProfile(req: Request, res: Response) {
+    // get password from param
+    const { password } = req.params;
+
+    // get user from request via auth middleware
+    const user = req.user;
+
+    // check user exists
+    if (!user) {
+      throw AppError.notFound({
+        message: "Profile not found",
+      });
+    }
+
+    // fetch user password
+    const [userPassword] = await db
+      .select({
+        password: userTable.password,
+      })
+      .from(userTable)
+      .where(eq(userTable.id, user.id));
+
+      // compare passed password against hashed user password
+    const isPasswordCorrect = this.hashingProvider.comparePasswords({
+      password: password.toString(),
+      hashedPassword: userPassword.password,
+    });
+
+    // check if password is correct
+    if(!isPasswordCorrect) {
+      throw AppError.unauthorized({
+        message: "invalid credentials"
+      })
+    }
+
+    // delete user
+    await db.delete(userTable).where(eq(userTable.id, user.id))
+
+    
+    return {
+      message: "Profile deleted"
+    };
+  }
 }
