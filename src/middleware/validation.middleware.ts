@@ -1,15 +1,15 @@
 import { Request, Response, NextFunction } from "express";
-import { ZodSchema } from "zod";
+import { z } from "zod";
 
 export const validateBody =
-	(schema: ZodSchema) => (req: Request, res: Response, next: NextFunction) => {
-		const result = schema.safeParse(req.body);
-		if (!result.success) {
-			return res.status(400).json({
-				message: "Validation failed",
-				errors: result.error.flatten().fieldErrors,
-			});
-		}
-		req.body = result.data;
-		next();
-	};
+  (schema: z.ZodType) => (req: Request, res: Response, next: NextFunction) => {
+    const result = schema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({
+        message: "Validation failed",
+        errors: z.flattenError(result.error).fieldErrors,
+      });
+    }
+    req.body = result.data;
+    next();
+  };

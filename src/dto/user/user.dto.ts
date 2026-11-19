@@ -52,12 +52,14 @@ export const updateUserDto = z.object({
   firstName: z
     .string()
     .min(3, "First name must be included")
-    .max(100, "First name must not exceed 100 characters"),
+    .max(100, "First name must not exceed 100 characters")
+    .optional(),
 
   lastName: z
     .string()
     .min(1, "Last name must be included")
-    .max(100, "Last name must not exceed 100 characters"),
+    .max(100, "Last name must not exceed 100 characters")
+    .optional(),
 
   username: z
     .string()
@@ -67,22 +69,15 @@ export const updateUserDto = z.object({
       "Username can only contain letters, numbers, dots, and underscores, and cannot start or end with a dot or underscore",
     )
     .min(5, "Username must have at least 3 characters")
-    .max(30, "Username must not exceed 30 characters"),
-
-  password: z
-    .string()
-    .regex(
-      passwordRegex,
-      "Password must include uppercase, lowercase, a number, and a special character (@$!%*?&)",
-    )
-    .min(10, "Password must not be less than 10 characters")
-    .max(20, "Password must not exceed 20 characters"),
+    .max(30, "Username must not exceed 30 characters")
+    .optional(),
 
   email: z
     .string()
     .trim()
     .toLowerCase()
-    .regex(emailRegex, "Please enter a valid email address"),
+    .regex(emailRegex, "Please enter a valid email address")
+    .optional(),
 });
 
 export type UpdateUserDTO = z.infer<typeof updateUserDto>;
